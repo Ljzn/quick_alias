@@ -1,12 +1,28 @@
 defmodule QuickAlias do
-  defmacro __using__({_, _, atom_module}) do
-    module = Module.concat(atom_module)
+  defmacro __using__(opts) do
+    {module, excepts} = case opts do
+      {_, _, _} = m ->
+        {to_module_name(m), []}
+
+      opts ->
+        {opts[:parent] |> to_module_name(), opts[:except] |> Enum.map(&to_module_name/1)}
+
+    end
+
+    excepts = Enum.map(excepts, fn e -> to_string(e) |> String.trim_leading("Elixir.") end)
 
     loaded_modules()
     |> get_children_of(module)
+    |> Enum.reject(fn m ->
+      Enum.any?(excepts, fn e ->
+        String.starts_with?(Enum.join(m, "."), e)
+      end)
+    end)
     |> Enum.map(&build_quoted_alias/1)
     |> build_quoted_block
   end
+
+  defp to_module_name({_, _, atom_module}), do: Module.concat(atom_module)
 
   defp build_quoted_block(aliases), do: {:__block__, [], aliases}
 

@@ -19,10 +19,10 @@ defmodule QuickAliasTest do
     assert_raise UndefinedFunctionError, &SecondChild.func/0
     assert_raise UndefinedFunctionError, &NotLoaded.func/0
 
-    use QuickAlias, Parent
+    use QuickAlias, parent: Parent, except: [Parent.SecondChild]
 
     assert Parent.FirstChild.func == FirstChild.func
-    assert Parent.SecondChild.func == SecondChild.func
+    assert_raise UndefinedFunctionError, &SecondChild.func/0
     assert_raise UndefinedFunctionError, &NotLoaded.func/0
   end
 end
